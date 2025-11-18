@@ -1,0 +1,31 @@
+{
+  "name": "control-m-viewer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "convert-csv": "ts-node src/csv-to-sqlite.ts",
+    "dev": "echo 'Open public/index.html in your browser'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qapquiz/control-m-viewer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/qapquiz/control-m-viewer/issues"
+  },
+  "homepage": "https://github.com/qapquiz/control-m-viewer#readme",
+  "dependencies": {
+    "@types/node": "^24.10.1",
+    "csv-parser": "^3.2.0",
+    "sqlite3": "^5.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
