@@ -152,11 +152,11 @@
             background: var(--bg-secondary);
             border-radius: 8px;
             box-shadow: 0 2px 4px var(--shadow);
-            overflow: hidden;
+            overflow-x: auto;
         }
 
         table {
-            width: 100%;
+            min-width: 100%;
             border-collapse: collapse;
         }
 
@@ -293,6 +293,127 @@
             font-weight: bold;
             color: var(--accent);
         }
+
+        .column-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .column-toggle-btn {
+            background: var(--primary);
+            color: var(--text-inverse);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .column-toggle-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .column-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .column-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            box-shadow: 0 4px 8px var(--shadow);
+            z-index: 1000;
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .column-menu.show {
+            display: block;
+        }
+
+        .column-item {
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .column-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .column-checkbox {
+            margin: 0;
+        }
+
+        .column-label {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                min-width: auto;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            th, td {
+                padding: 8px;
+                font-size: 14px;
+            }
+            
+            .pagination {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .column-controls {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            th, td {
+                padding: 6px;
+                font-size: 12px;
+            }
+            
+            .column-menu {
+                min-width: 150px;
+                max-height: 200px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -331,6 +452,13 @@
                 <option value="100">100 rows</option>
                 <option value="200">200 rows</option>
             </select>
+        </div>
+
+        <div class="column-controls" id="columnControls" style="display: none;">
+            <div class="column-dropdown">
+                <button class="column-toggle-btn" id="columnToggleBtn">Toggle Columns</button>
+                <div class="column-menu" id="columnMenu"></div>
+            </div>
         </div>
 
         <div id="error" class="error" style="display: none;"></div>
@@ -372,6 +500,8 @@
         let pageSize = 25;
         let sortColumn = null;
         let sortDirection = 'asc';
+        let allColumns = [];
+        let visibleColumns = new Set();
 
         const dropZone = document.getElementById('dropZone');
         const dbFile = document.getElementById('dbFile');
@@ -389,6 +519,9 @@
         const tableBody = document.getElementById('tableBody');
         const pagination = document.getElementById('pagination');
         const themeToggle = document.getElementById('themeToggle');
+        const columnControls = document.getElementById('columnControls');
+        const columnToggleBtn = document.getElementById('columnToggleBtn');
+        const columnMenu = document.getElementById('columnMenu');
 
         // Theme management
         function initTheme() {
@@ -507,11 +640,15 @@
                     return obj;
                 }) : [];
 
+                allColumns = result[0] ? result[0].columns : [];
+                visibleColumns = new Set(allColumns);
+                
                 filteredData = [...allData];
                 currentPage = 1;
                 sortColumn = null;
                 sortDirection = 'asc';
                 
+                setupColumnControls();
                 renderTable();
                 hideLoading();
             } catch (err) {
@@ -527,7 +664,7 @@
                 return;
             }
 
-            const columns = Object.keys(filteredData[0]);
+            const columns = allColumns.filter(col => visibleColumns.has(col));
             const startIndex = (currentPage - 1) * pageSize;
             const endIndex = startIndex + pageSize;
             const pageData = filteredData.slice(startIndex, endIndex);
@@ -599,7 +736,7 @@
         function updateStats() {
             document.getElementById('totalRows').textContent = allData.length.toLocaleString();
             document.getElementById('filteredRows').textContent = filteredData.length.toLocaleString();
-            document.getElementById('totalColumns').textContent = filteredData.length > 0 ? Object.keys(filteredData[0]).length : 0;
+            document.getElementById('totalColumns').textContent = `${visibleColumns.size}/${allColumns.length}`;
             tableInfo.style.display = 'block';
         }
 
@@ -688,22 +825,28 @@
             pagination.appendChild(nextBtn);
         }
 
-        // Search functionality
+        // Search functionality (optimized for performance)
+        let searchTimeout;
         searchBox.addEventListener('input', () => {
-            const searchTerm = searchBox.value.toLowerCase().trim();
-            
-            if (searchTerm === '') {
-                filteredData = [...allData];
-            } else {
-                filteredData = allData.filter(row => {
-                    return Object.values(row).some(value => 
-                        String(value).toLowerCase().includes(searchTerm)
-                    );
-                });
-            }
-            
-            currentPage = 1;
-            renderTable();
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const searchTerm = searchBox.value.toLowerCase().trim();
+                
+                if (searchTerm === '') {
+                    filteredData = [...allData];
+                } else {
+                    // Only search visible columns for better performance
+                    const visibleColumnNames = allColumns.filter(col => visibleColumns.has(col));
+                    filteredData = allData.filter(row => {
+                        return visibleColumnNames.some(col => 
+                            String(row[col]).toLowerCase().includes(searchTerm)
+                        );
+                    });
+                }
+                
+                currentPage = 1;
+                renderTable();
+            }, 300); // Debounce search for better performance
         });
 
         // Page size change
@@ -711,6 +854,65 @@
             pageSize = parseInt(pageSizeSelect.value);
             currentPage = 1;
             renderTable();
+        });
+
+        // Column controls
+        function setupColumnControls() {
+            if (allColumns.length <= 5) {
+                columnControls.style.display = 'none';
+                return;
+            }
+            
+            columnControls.style.display = 'flex';
+            renderColumnMenu();
+        }
+
+        function renderColumnMenu() {
+            columnMenu.innerHTML = '';
+            
+            allColumns.forEach(col => {
+                const item = document.createElement('div');
+                item.className = 'column-item';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'column-checkbox';
+                checkbox.checked = visibleColumns.has(col);
+                checkbox.addEventListener('change', () => toggleColumn(col, checkbox.checked));
+                
+                const label = document.createElement('label');
+                label.className = 'column-label';
+                label.textContent = col;
+                label.addEventListener('click', () => {
+                    checkbox.checked = !checkbox.checked;
+                    toggleColumn(col, checkbox.checked);
+                });
+                
+                item.appendChild(checkbox);
+                item.appendChild(label);
+                columnMenu.appendChild(item);
+            });
+        }
+
+        function toggleColumn(column, isVisible) {
+            if (isVisible) {
+                visibleColumns.add(column);
+            } else {
+                visibleColumns.delete(column);
+            }
+            renderTable();
+        }
+
+        // Column menu toggle
+        columnToggleBtn.addEventListener('click', () => {
+            columnMenu.classList.toggle('show');
+        });
+
+        // Close column menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!columnControls.contains(e.target)) {
+                columnMenu.classList.remove('show');
+            }
         });
 
         // UI helpers

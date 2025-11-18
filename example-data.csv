@@ -1,0 +1,16 @@
+id,first_name,last_name,email,age,department,salary,city,start_date,phone,skill_level,project_code
+1,John,Doe,john.doe@company.com,28,Engineering,75000,New York,2022-01-15,555-0101,Senior,PROJ001
+2,Jane,Smith,jane.smith@company.com,32,Marketing,85000,Los Angeles,2021-03-22,555-0102,Lead,PROJ002
+3,Bob,Johnson,bob.johnson@company.com,45,Sales,92000,Chicago,2020-06-10,555-0103,Expert,PROJ003
+4,Alice,Brown,alice.brown@company.com,29,Engineering,78000,Houston,2022-08-01,555-0104,Intermediate,PROJ001
+5,Charlie,Wilson,charlie.wilson@company.com,38,HR,88000,Phoenix,2021-11-15,555-0105,Senior,PROJ004
+6,Diana,Davis,diana.davis@company.com,31,Finance,82000,Philadelphia,2022-02-28,555-0106,Lead,PROJ005
+7,Edward,Miller,edward.miller@company.com,27,Engineering,73000,San Antonio,2023-01-10,555-0107,Junior,PROJ001
+8,Frank,Garcia,frank.garcia@company.com,41,Operations,95000,San Diego,2020-09-05,555-0108,Expert,PROJ006
+9,Grace,Rodriguez,grace.rodriguez@company.com,35,Marketing,87000,Dallas,2021-07-12,555-0109,Senior,PROJ002
+10,Henry,Martinez,henry.martinez@company.com,39,Engineering,91000,San Jose,2021-04-18,555-0110,Lead,PROJ007
+11,Isabel,White,isabel.white@company.com,26,Sales,68000,Boston,2023-03-01,555-0111,Junior,PROJ003
+12,Jack,Thompson,jack.thompson@company.com,42,Legal,98000,Seattle,2020-12-15,555-0112,Expert,PROJ008
+13,Karen,Anderson,karen.anderson@company.com,33,Engineering,83000,Denver,2022-05-20,555-0113,Intermediate,PROJ009
+14,Luis,Taylor,luis.taylor@company.com,30,IT,79000,Portland,2022-09-10,555-0114,Senior,PROJ010
+15,Mia,Thomas,mia.thomas@company.com,37,Marketing,86000,Austin,2021-10-05,555-0115,Lead,PROJ002
